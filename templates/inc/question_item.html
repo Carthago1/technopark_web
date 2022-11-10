@@ -1,0 +1,25 @@
+{% load static %}
+
+<div class="row">
+    <div class="col-2">
+        <div class="avatar">
+            <img src="{% static 'img/' %}{{ question.image_number }}.jpg" alt="" />
+        </div>
+        <div class="like">
+            <a class="link-like" href="#"><img class = "arrows" src="{% static 'img/down.jpg' %}"></a>
+            <div class="counter">{{ question.likes_number }}</div>
+            <a class="link-like" href="#"><img class = "arrows" src="{% static 'img/up.jpg' %}"></a>
+        </div>
+    </div>
+    <div class="col-10">
+        <h2 class="question-title"><a href="{% url 'question' question_id=question.id %}">{{ question.title }}</a></h2>
+        <div class="question-text">
+            {{ question.text }}
+        </div>
+        <div class="question-footer">
+            <span class="answer"><a href="{% url 'question' question_id=question.id %}">answer ({{ question.answers_number }})</a></span>
+            {% include 'inc/question_tags.html' %}
+        </div>
+    </div>
+</div>
+
