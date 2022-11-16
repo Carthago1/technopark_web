@@ -1,41 +1,75 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from random import randint
 
-QUESTIONS = [
-    {
-        'id': question_id,
-        'title': f'Question {question_id}',
-        'text': f'Text of question {question_id}',
-        'answers_number': question_id,
-        'tags': [f'tag{i + 1}' for i in range(question_id % 5 + 1)],
-        'image_number': str(question_id % 3 + 1),
-        'likes_number': question_id,
-        'hot_rating': randint(1, 100),
-    } for question_id in range(1, 101)
-]
 
-ANSWERS = [
-    {
-        'question_id': question_id,
-        'answer_number': question_id,
-    } for question_id in range(1, 101)
-]
+class ProfileManager(models.Manager):
+    def get_user_by_username(self, username):
+        return self.filter(username=username)
 
-for answer in ANSWERS:
-    answers = []
-    for answer_id in range(1, answer['answer_number'] + 1):
-        answers.append({
-            'title': f'Answer {answer_id}',
-            'text': f'Text of answer {answer_id}',
-            'likes_number': answer_id,
-            'image_number': str(answer_id % 3 + 1),
-        })
-    answer['answer_items'] = answers
+    def get_best_members(self):
+        return self.filter(id__lt=6)
 
-USER = {
-    'login': 'dr_pepper',
-    'email': 'dr_pepper@mail.ru',
-    'nick_name': 'Dr. Pepper',
-    'image_number': '3',
-}
+
+class Profile(AbstractUser):
+    avatar = models.ImageField(upload_to='uploads/')
+    nickname = models.CharField(max_length=20)
+
+    objects = ProfileManager()
+
+
+class Like(models.Model):
+    amount_of_likes = models.IntegerField(default=0)
+    voted_users = models.ManyToManyField(Profile)
+
+
+class TagManager(models.Manager):
+    def get_popular_tags(self):
+        return self.filter(id__lt=9)
+
+
+class Tag(models.Model):
+    tag = models.CharField(max_length=30)
+
+    objects = TagManager()
+
+    def __str__(self):
+        return self.tag
+
+
+class QuestionManager(models.Manager):
+    def get_hot_questions(self):
+        return self.order_by('-likes__amount_of_likes')
+
+    def get_new_questions(self):
+        return self.order_by('-date_of_creation')
+
+    def get_questions_by_tag(self, tag):
+        return self.filter(tags__tag=tag)
+
+
+class Question(models.Model):
+    title = models.CharField(max_length=90)
+    text = models.TextField(max_length=512)
+    profile_id = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+    date_of_creation = models.DateTimeField(auto_now_add=True)
+    tags = models.ManyToManyField(Tag)
+    likes = models.OneToOneField(Like, on_delete=models.CASCADE)
+    amount_of_answers = models.IntegerField(default=0)
+
+    objects = QuestionManager()
+
+    class Meta:
+        ordering = ['-id']
+
+
+class Answer(models.Model):
+    question_id = models.ForeignKey(Question, on_delete=models.CASCADE)
+    text = models.TextField(max_length=512)
+    profile_id = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+    date_of_creation = models.DateTimeField(auto_now_add=True)
+    is_correct = models.BooleanField(default=False)
+    likes = models.OneToOneField(Like, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-id']
 
