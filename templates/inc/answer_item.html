@@ -4,11 +4,11 @@
     <div class="row">
         <div class="col-2">
             <div class="avatar">
-                <img src="{% static 'img/' %}{{ answer.image_number }}.jpg" alt="" />
+                <img src="{{ MEDIA_URL }}{{ answer.profile_id.avatar }}" alt="" />
             </div>
             <div class="like">
                 <a class="link-like" href="#"><img class = "arrows" src="{% static 'img/down.jpg' %}"></a>
-                <div class="counter">{{ answer.likes_number }}</div>
+                <div class="counter">{{ answer.likes.amount_of_likes }}</div>
                 <a class="link-like" href="#"><img class = "arrows" src="{% static 'img/up.jpg' %}"></a>
             </div>
         </div>

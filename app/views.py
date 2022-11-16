@@ -20,21 +20,25 @@ def paginate(objects_list, request, per_page=10):
     return page, paginator.num_pages
 
 
+def check_question_id(question_id):
+    question_item = models.Question.objects.filter(id=question_id)
+    answers = models.Answer.objects.filter(question_id=question_id)
+    if question_item.count() == 0:
+        raise Http404("Wrong question index")
+    return question_item, answers
+
+
 def index(request):
-    context = {'questions': models.QUESTIONS, 'is_authorized': True}
-    page, number_of_pages = paginate(context['questions'], request)
+    questions = models.Question.objects.get_new_questions()
+    page, number_of_pages = paginate(questions, request)
     context = {'questions': page, 'number_of_pages': number_of_pages, 'is_authorized': True}
     return render(request, 'index.html', context=context)
 
 
 def question(request, question_id: int):
-    try:
-        question_item = models.QUESTIONS[question_id - 1]
-        answers = models.ANSWERS[question_id - 1]
-    except IndexError:
-        raise Http404("Wrong question index")
-    page, number_of_pages = paginate(answers['answer_items'], request)
-    context = {'question': question_item, 'answers': page, 'number_of_pages': number_of_pages, 'is_authorized': True}
+    question_item, answers = check_question_id(question_id)
+    page, number_of_pages = paginate(answers, request)
+    context = {'question': question_item[0], 'answers': page, 'number_of_pages': number_of_pages, 'is_authorized': True}
     return render(request, 'question.html', context=context)
 
 
@@ -49,8 +53,8 @@ def signup(request):
 
 
 def settings(request):
-    user = models.USER
-    context = {'user': user, 'is_authorized': True}
+    user = models.Profile.objects.get_user_by_username('user0')
+    context = {'user': user[0], 'is_authorized': True}
     return render(request, 'settings.html', context=context)
 
 
@@ -60,18 +64,15 @@ def ask(request):
 
 
 def tag(request, tag_name: str):
-    questions = []
-    for question_item in models.QUESTIONS:
-        for tag_item in question_item['tags']:
-            if tag_item == tag_name:
-                questions.append(question_item)
-                break
+    questions = models.Question.objects.get_questions_by_tag(tag_name)
     page, number_of_pages = paginate(questions, request)
     context = {'questions': page, 'tag': tag_name, 'number_of_pages': number_of_pages, 'is_authorized': True}
     return render(request, 'tag.html', context=context)
 
 
 def hot(request):
-    context = {'questions': sorted(models.QUESTIONS, key=lambda x: x['hot_rating'])[:-6:-1], 'is_authorized': True}
+    questions = models.Question.objects.get_hot_questions()
+    page, number_of_pages = paginate(questions, request)
+    context = {'questions': page, 'number_of_pages': number_of_pages, 'is_authorized': True}
     return render(request, 'hot.html', context=context)
 

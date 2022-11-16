@@ -1,5 +1,5 @@
 <span class="question-tags">Tags:
-    {% for tag in question.tags %}
+    {% for tag in question.tags.all %}
         <a href={% url 'tag' tag_name=tag %}>{{ tag }}</a>
     {% endfor %}
 </span>
